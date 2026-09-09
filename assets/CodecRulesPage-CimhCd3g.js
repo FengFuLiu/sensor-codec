@@ -1,4 +1,4 @@
-import{r as u,I as R,j as i}from"./index-XwPa9sEC.js";import{S as I,a as U,b as S,E as m,T as f}from"./index-COI2O-SF.js";import{I as D}from"./index-bEjMn0F8.js";var L={icon:{tag:"svg",attrs:{viewBox:"64 64 896 896",focusable:"false"},children:[{tag:"path",attrs:{d:"M832 64H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-260 72h96v209.9L621.5 312 572 347.4V136zm220 752H232V136h280v296.9c0 3.3 1 6.6 3 9.3a15.9 15.9 0 0022.3 3.7l83.8-59.9 81.4 59.4c2.7 2 6 3.1 9.4 3.1 8.8 0 16-7.2 16-16V136h64v752z"}}]},name:"book",theme:"outlined"};function _(){return _=Object.assign?Object.assign.bind():function(e){for(var n=1;n<arguments.length;n++){var r=arguments[n];for(var t in r)Object.prototype.hasOwnProperty.call(r,t)&&(e[t]=r[t])}return e},_.apply(this,arguments)}const F=(e,n)=>u.createElement(R,_({},e,{ref:n,icon:L})),E=u.forwardRef(F),A=`/**
+import{r as u,I as R,j as i}from"./index-BzU-TBPJ.js";import{S as I,a as U,b as S,E as m,T as f}from"./index-B8ejE0m9.js";import{I as L}from"./index-CKkYrncz.js";var D={icon:{tag:"svg",attrs:{viewBox:"64 64 896 896",focusable:"false"},children:[{tag:"path",attrs:{d:"M832 64H192c-17.7 0-32 14.3-32 32v832c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V96c0-17.7-14.3-32-32-32zm-260 72h96v209.9L621.5 312 572 347.4V136zm220 752H232V136h280v296.9c0 3.3 1 6.6 3 9.3a15.9 15.9 0 0022.3 3.7l83.8-59.9 81.4 59.4c2.7 2 6 3.1 9.4 3.1 8.8 0 16-7.2 16-16V136h64v752z"}}]},name:"book",theme:"outlined"};function _(){return _=Object.assign?Object.assign.bind():function(e){for(var n=1;n<arguments.length;n++){var r=arguments[n];for(var t in r)Object.prototype.hasOwnProperty.call(r,t)&&(e[t]=r[t])}return e},_.apply(this,arguments)}const F=(e,n)=>u.createElement(R,_({},e,{ref:n,icon:D})),E=u.forwardRef(F),A=`/**
  * Access Mode 字段构建器
  * 负责构建 codec 对象的 access_mode 字段
  *
@@ -594,7 +594,7 @@ export class MaxLengthBuilder {
 		return undefined;
 	}
 }
-`,P=`/**
+`,V=`/**
  * Property Basic 字段构建器
  * 负责构建 codec 对象的基础字段（id, name, description）
  *
@@ -647,7 +647,7 @@ export class PropertyBasicBuilder {
 		return null;
 	}
 }
-`,V=`/**
+`,P=`/**
  * Range 字段构建器
  * 负责构建 codec 对象的 range 字段
  *
@@ -667,12 +667,12 @@ export class RangeBuilder {
 	/**
 	 * 构建 range 字段
 	 * @param tslInfo 物模型信息对象
-	 * @param dataType 数据类型
+	 * @param valueType 数据类型
 	 * @returns range 值 [min, max]，如果不适用则返回 undefined
 	 */
-	static buildRange(tslInfo: any, dataType: string): [number, number] | undefined {
+	static buildRange(tslInfo: any, valueType: string): [number, number] | undefined {
 		// 仅用于 NUMBER 类型
-		if (!this.isNumberType(dataType)) {
+		if (!this.isNumberType(valueType)) {
 			return undefined;
 		}
 
@@ -685,7 +685,7 @@ export class RangeBuilder {
 		}
 
 		// 对于浮点类型保留原值，对于整数类型向下取整
-		if (dataType === 'FLOAT' || dataType === 'DOUBLE') {
+		if (valueType === 'FLOAT' || valueType === 'DOUBLE') {
 			return [min, max];
 		} else {
 			return [Math.floor(min), Math.floor(max)];
@@ -1100,6 +1100,14 @@ export class ValuesBuilder {
 			return mappings;
 		}
 
+        let mapKey = '';
+        if (tslInfo.ipsoMapping &&
+            typeof tslInfo.ipsoMapping === 'string') {
+            mapKey = tslInfo.ipsoMapping;
+        } else {
+            return mappings;
+        }
+
 		// 获取父级 ID（例如：interface_settings.object -> interface_settings）
 		const parts = tslInfo.propertyId.split('.');
 		const parentId = parts.slice(0, -1).join('.');
@@ -1132,6 +1140,13 @@ export class ValuesBuilder {
 							mappingValue = siblingInfo.ipsoMapping.substring(delimiterIndex + delimiter.length).trim();
 						}
 					} else if (typeof siblingInfo.ipsoMapping === 'object') {
+
+                        const keys = Object.keys(siblingInfo.ipsoMapping);
+                        if (!keys.includes(mapKey)) {
+                            continue;
+                        }
+
+
 						// 对象格式：取第一个值
 						const values = Object.values(siblingInfo.ipsoMapping);
 						if (values.length > 0) {
@@ -1354,6 +1369,7 @@ import { BlacklistWhitelistFixer } from './blacklist-whitelist-fixer';
 import { ParameterlessServiceFixer } from './parameterless-service-fixer';
 import { TemperatureUnitFixer } from './temperature-unit-fixer';
 import { SynchronizeTimeFixer } from './synchronize-time-fixer';
+import { ValueNameUnitSymbolFixer } from './value-name-unit-symbol-fixer';
 
 export class FixerPipeline {
 	private fixers: Fixer[] = [];
@@ -1392,11 +1408,11 @@ export class FixerPipeline {
 			.addFixer(new UnitFixer())
 			.addFixer(new TemperatureUnitFixer()) // 温度字段替换为 celsius/fahrenheit 变体，并同步温度引用
 			.addFixer(new ValueFixer())
+			.addFixer(new ValueNameUnitSymbolFixer()) // values[].name 温度符号全角转半角（℃/℉ → °C/°F）
 			.addFixer(new ReferenceFixer())
 			.addFixer(new PropertyFixer())
-      .addFixer(new SynchronizeTimeFixer()) // synchronize_time 替换为固定 BACnet 写属性
+			.addFixer(new SynchronizeTimeFixer()) // synchronize_time 替换为固定 BACnet 写属性
 			.addFixer(new BlacklistWhitelistFixer()); // 黑白名单过滤应该放在最后
-
 
 		return pipeline;
 	}
@@ -1597,7 +1613,7 @@ export class PropertyFixer extends BaseFixer {
 		return objects[0] || null;
 	}
 }
-`,X=`/**
+`,K=`/**
  * Reference 修复器
  * 负责修复 codec 对象的 reference 字段
  *
@@ -1666,7 +1682,7 @@ export class ReferenceFixer extends BaseFixer {
 		return expandedRefs;
 	}
 }
-`,K=`/**
+`,X=`/**
  * 同步时间修复器
  * 负责将 synchronize_time 对象替换为固定的 BACnet 写属性
  *
@@ -1732,7 +1748,7 @@ export class SynchronizeTimeFixer extends BaseFixer {
  *        - 绝对温度 unit='°C', bacnet_unit_type_id=62
  *        - 温度差值 unit='K', bacnet_unit_type_id=121
  *      - 华氏度变体：
- *        - 绝对温度 unit='℉', bacnet_unit_type_id=64
+ *        - 绝对温度 unit='°F', bacnet_unit_type_id=64
  *        - 温度差值 unit='ΔT°F', bacnet_unit_type_id=120
  *    - 非温度字段保持原样
  *    - ID 前缀规则：celsius_/fahrenheit_ 加在最后一段上
@@ -1773,15 +1789,14 @@ export class TemperatureUnitFixer extends BaseFixer {
 		const result: BacnetObject[] = [];
 
 		for (const obj of objects) {
-
 			// 温度字段不保留原对象，只保留摄氏度和华氏度变体。
-			if (this.isTemperatureUnit(obj.unit)) {
+			if (this.isTemperatureUnit(obj.unit) && !this.isTemperatureVariant(obj.id)) {
 				const isDelta = obj.unit === TemperatureUnitFixer.DELTA_UNIT;
 				result.push(this.createCelsiusVariant(obj, isDelta, objects));
 				result.push(this.createFahrenheitVariant(obj, isDelta, objects));
 			} else {
-                result.push(obj);
-            }
+				result.push(obj);
+			}
 		}
 
 		return result;
@@ -1793,6 +1808,16 @@ export class TemperatureUnitFixer extends BaseFixer {
 	private isTemperatureUnit(unit: string | undefined): boolean {
 		if (!unit) return false;
 		return unit === TemperatureUnitFixer.CELSIUS_UNIT || unit === TemperatureUnitFixer.DELTA_UNIT;
+	}
+
+	/**
+	 * 判断是否是已生成的温度单位变体。
+	 * 变体仍可能使用 °C 或 K，因此不能仅根据 unit 判断，避免重复执行
+	 * --fix-codec 时继续添加 celsius_/fahrenheit_ 前缀。
+	 */
+	private isTemperatureVariant(id: string): boolean {
+		const lastSegment = id.substring(id.lastIndexOf('.') + 1);
+		return lastSegment.startsWith('celsius_') || lastSegment.startsWith('fahrenheit_');
 	}
 
 	/**
@@ -1848,7 +1873,7 @@ export class TemperatureUnitFixer extends BaseFixer {
 	 * 创建华氏度变体对象，并把温度引用同步改为 fahrenheit_* 变体
 	 */
 	private createFahrenheitVariant(original: BacnetObject, isDelta: boolean, allObjects: BacnetObject[]): BacnetObject {
-		const unit = isDelta ? 'ΔT°F' : '℉';
+		const unit = isDelta ? 'ΔT°F' : '°F';
         const bacnet_unit_type_id = isDelta ? 120 : 64;
         const bacnet_unit_type = isDelta ? 'UNITS_DELTA_DEGREES_FAHRENHEIT' : 'UNITS_DEGREES_FAHRENHEIT';
 		const variant: BacnetObject = {
@@ -1981,8 +2006,8 @@ export class UnitFixer extends BaseFixer {
 		//https://github.com/Milesight-IoT/codec/blob/release/bacnet_unit.md
 		const unitNormalization: Record<string, string> = {
 			'℃': '°C', // 全角摄氏度 -> 半角
-			'°F': '℉', // 半角华氏度 -> 全角
-			'ug/m3': 'µg/m³', 
+			'℉': '°F', // 全角华氏度 -> 半角
+			'ug/m3': 'µg/m³',
 			Lux: 'lx', // 常见别名 -> BACnet 标准
 			lux: 'lx', // 常见别名 -> BACnet 标准
 		};
@@ -2046,7 +2071,7 @@ export class UnitFixer extends BaseFixer {
  *
  * 2. 特殊处理：
  *    - 如果 id 以 .reserved 结尾且 values 为空，自动添加 enable/disable 枚举值
- *    - 如果 values 数组长度小于 2，会复制一次（历史遗留逻辑）
+ *    - 如果 values 数组只有一个数值枚举，自动补充 value + 1 的 Unsupported 枚举值
  */
 
 import { BaseFixer, FixerContext } from './base-fixer';
@@ -2107,14 +2132,82 @@ export class ValueFixer extends BaseFixer {
 		// must contain name/value
 		if (!values.every(v => 'name' in v && 'value' in v)) return;
 
+		if (values.length === 1 && typeof values[0].value === 'number') {
+			values.push({
+				value: values[0].value + 1,
+				name: 'Unsupported Command',
+			});
+		}
+
+		if (values.length < 2) {
+			throw new Error(
+				\`对象 \${obj.id} 的 values 数组长度必须至少为 2，且唯一枚举值必须为数值，请修改物模型。\`,
+			);
+		}
+
 		// Reorder: value 在前，name 在后
-		obj.values = (values.length < 2 ? values.concat(values) : values).map((v: any) => ({
+		obj.values = values.map((v: any) => ({
 			value: v.value,
 			name: v.name,
 		}));
 	}
 }
-`,Q=`# CodecJson 字段转换规则文档
+`,Q=`/**
+ * 枚举 name 单位符号修复器
+ * 负责将 values[].name 中软件不识别的全角温度符号改为半角形式
+ *
+ * 修复规则：
+ *
+ * 1. 触发条件：
+ *    - 任意对象存在 values 数组
+ *    - values[].name 为 '℃' 或 '℉'
+ *
+ * 2. 替换规则：
+ *    - ℃ → °C
+ *    - ℉ → °F
+ */
+
+import { BaseFixer, FixerContext } from './base-fixer';
+import { BacnetObject } from '../core/bacnet-object-generator';
+
+/**
+ * 枚举 name 单位符号修复器
+ */
+export class ValueNameUnitSymbolFixer extends BaseFixer {
+	private static readonly NAME_NORMALIZATION: Record<string, string> = {
+		'℃': '°C',
+		'℉': '°F',
+	};
+
+	getName(): string {
+		return 'ValueNameUnitSymbolFixer';
+	}
+
+	process(objects: BacnetObject[], _context?: FixerContext): BacnetObject[] {
+		for (const obj of objects) {
+			this.fixValuesNames(obj);
+		}
+		return objects;
+	}
+
+	/**
+	 * 修复单个对象 values[].name 中的温度符号
+	 */
+	private fixValuesNames(obj: BacnetObject): void {
+		const values = obj.values;
+		if (!Array.isArray(values)) return;
+
+		for (const item of values) {
+			if (!item || typeof item !== 'object' || typeof item.name !== 'string') continue;
+
+			const normalized = ValueNameUnitSymbolFixer.NAME_NORMALIZATION[item.name];
+			if (normalized) {
+				item.name = normalized;
+			}
+		}
+	}
+}
+`,nn=`# CodecJson 字段转换规则文档
 
 > 本文档面向测试人员和业务人员，详细说明每个字段的转换规则、数据来源和测试用例。
 
@@ -2947,14 +3040,14 @@ BacnetObject[] (使用 6 个 Fixer 修复)
     ↓
 codec.json (最终输出)
 \`\`\`
-`,nn=Object.assign({"../../../../src/codecJson/builders/access-mode-builder.ts":A,"../../../../src/codecJson/builders/data-type-builder.ts":C,"../../../../src/codecJson/builders/default-value-builder.ts":M,"../../../../src/codecJson/builders/max-length-builder.ts":w,"../../../../src/codecJson/builders/property-basic-builder.ts":P,"../../../../src/codecJson/builders/range-builder.ts":V,"../../../../src/codecJson/builders/reference-builder.ts":W,"../../../../src/codecJson/builders/unit-builder.ts":k,"../../../../src/codecJson/builders/values-builder.ts":G}),en=Object.assign({"../../../../src/codecJson/fixes/base-fixer.ts":J,"../../../../src/codecJson/fixes/blacklist-whitelist-fixer.ts":$,"../../../../src/codecJson/fixes/index.ts":x,"../../../../src/codecJson/fixes/parameterless-service-fixer.ts":z,"../../../../src/codecJson/fixes/property-fixer.ts":Y,"../../../../src/codecJson/fixes/reference-fixer.ts":X,"../../../../src/codecJson/fixes/synchronize-time-fixer.ts":K,"../../../../src/codecJson/fixes/temperature-unit-fixer.ts":H,"../../../../src/codecJson/fixes/unit-fixer.ts":q,"../../../../src/codecJson/fixes/value-fixer.ts":Z}),tn=["PropertyBasicBuilder","AccessModeBuilder","DefaultValueBuilder","DataTypeBuilder","UnitBuilder","MaxLengthBuilder","RangeBuilder","ValuesBuilder","ReferenceBuilder"],rn=new Set(["base-fixer.ts","index.ts"]);function an(e){return e.replace(/^\/\*\*\s*/,"").replace(/\s*\*\/$/,"").split(`
+`,en=Object.assign({"../../../../src/codecJson/builders/access-mode-builder.ts":A,"../../../../src/codecJson/builders/data-type-builder.ts":C,"../../../../src/codecJson/builders/default-value-builder.ts":M,"../../../../src/codecJson/builders/max-length-builder.ts":w,"../../../../src/codecJson/builders/property-basic-builder.ts":V,"../../../../src/codecJson/builders/range-builder.ts":P,"../../../../src/codecJson/builders/reference-builder.ts":W,"../../../../src/codecJson/builders/unit-builder.ts":k,"../../../../src/codecJson/builders/values-builder.ts":G}),tn=Object.assign({"../../../../src/codecJson/fixes/base-fixer.ts":J,"../../../../src/codecJson/fixes/blacklist-whitelist-fixer.ts":$,"../../../../src/codecJson/fixes/index.ts":x,"../../../../src/codecJson/fixes/parameterless-service-fixer.ts":z,"../../../../src/codecJson/fixes/property-fixer.ts":Y,"../../../../src/codecJson/fixes/reference-fixer.ts":K,"../../../../src/codecJson/fixes/synchronize-time-fixer.ts":X,"../../../../src/codecJson/fixes/temperature-unit-fixer.ts":H,"../../../../src/codecJson/fixes/unit-fixer.ts":q,"../../../../src/codecJson/fixes/value-fixer.ts":Z,"../../../../src/codecJson/fixes/value-name-unit-symbol-fixer.ts":Q}),rn=["PropertyBasicBuilder","AccessModeBuilder","DefaultValueBuilder","DataTypeBuilder","UnitBuilder","MaxLengthBuilder","RangeBuilder","ValuesBuilder","ReferenceBuilder"],an=new Set(["base-fixer.ts","index.ts"]);function sn(e){return e.replace(/^\/\*\*\s*/,"").replace(/\s*\*\/$/,"").split(`
 `).map(n=>n.replace(/^\s*\*\s?/,"").replace(/\s+$/,"")).join(`
-`).trim()}function sn(e){const n=e.match(/^\s*\/\*\*[\s\S]*?\*\//);return n?an(n[0]):""}function y(e,n){const r=e.match(/export\s+(?:abstract\s+)?class\s+(\w+)/);return r!=null&&r[1]?r[1]:h(n).replace(/\.ts$/,"").split("-").map(a=>a.charAt(0).toUpperCase()+a.slice(1)).join("")}function on(e){const n=new Map,r=/\.addFixer\(\s*new\s+(\w+)\s*\(/g;let t,a=1;for(;t=r.exec(e);)t[1]&&!n.has(t[1])&&(n.set(t[1],a),a+=1);return n}function cn(e){const r=e.indexOf("/src/");return r!==-1?e.slice(r+1):e.replace(/^(\.\.\/)+/,"")}function h(e){return e.split("/").pop()||e}function v(e){return e.replace(/([a-z0-9])([A-Z])/g,"$1-$2").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()}function ln(e,n){for(const r of e.split(`
+`).trim()}function on(e){const n=e.match(/^\s*\/\*\*[\s\S]*?\*\//);return n?sn(n[0]):""}function y(e,n){const r=e.match(/export\s+(?:abstract\s+)?class\s+(\w+)/);return r!=null&&r[1]?r[1]:h(n).replace(/\.ts$/,"").split("-").map(a=>a.charAt(0).toUpperCase()+a.slice(1)).join("")}function cn(e){const n=new Map,r=/\.addFixer\(\s*new\s+(\w+)\s*\(/g;let t,a=1;for(;t=r.exec(e);)t[1]&&!n.has(t[1])&&(n.set(t[1],a),a+=1);return n}function ln(e){const r=e.indexOf("/src/");return r!==-1?e.slice(r+1):e.replace(/^(\.\.\/)+/,"")}function h(e){return e.split("/").pop()||e}function v(e){return e.replace(/([a-z0-9])([A-Z])/g,"$1-$2").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase()}function un(e,n){for(const r of e.split(`
 `)){const t=r.trim().match(/^#+\s+(.+)$/);if(t!=null&&t[1])return t[1].trim()}return n}function N(e){return e.split(`
-`).map(r=>r.trim()).filter(Boolean).find(r=>!r.startsWith("#")&&!r.startsWith("-")&&!r.startsWith("|")&&!/^\d+\./.test(r))||"暂无规则注释"}function un(e){const n=e.indexOf(`
+`).map(r=>r.trim()).filter(Boolean).find(r=>!r.startsWith("#")&&!r.startsWith("-")&&!r.startsWith("|")&&!/^\d+\./.test(r))||"暂无规则注释"}function pn(e){const n=e.indexOf(`
 ## Builder 转换规则`);return(n===-1?e:e.slice(0,n)).replace(/\n## 目录[\s\S]*?\n---\n/,`
 `).replace(/^#\s+CodecJson 字段转换规则文档\s*/u,`# 文档说明
-`).replace(/^##\s+0\.\s+/mu,"## ").trim()}function O(e,n,r,t){const a=cn(n),s=y(e,a),o=sn(e)||"暂无规则注释";return{id:`${r}-${v(s)}`,title:s,kind:r,sourcePath:a,markdown:o,summary:N(o),order:t}}function pn(){const e=un(Q),n=ln(e,"文档说明");return[{id:`overview-${v(n)}`,title:n,kind:"overview",sourcePath:"src/codecJson/docs/field-transformation-rules.md",markdown:e,summary:N(e),order:1}]}const dn=new Map(tn.map((e,n)=>[e,n+1])),fn=on(x),mn=Object.entries(nn).map(([e,n])=>{const r=y(n,e);return O(n,e,"builder",dn.get(r))}).sort((e,n)=>(e.order||Number.MAX_SAFE_INTEGER)-(n.order||Number.MAX_SAFE_INTEGER)||e.title.localeCompare(n.title)),_n=Object.entries(en).filter(([e])=>!rn.has(h(e))).map(([e,n])=>{const r=y(n,e);return O(n,e,"fixer",fn.get(r))}).sort((e,n)=>(e.order||Number.MAX_SAFE_INTEGER)-(n.order||Number.MAX_SAFE_INTEGER)||e.title.localeCompare(n.title)),Tn=[...pn(),...mn,..._n],{Text:d,Title:T}=U,B={overview:"总览",builder:"Builder",fixer:"Fixer"},j={overview:"blue",builder:"green",fixer:"gold"},yn={overview:"生成总览",builder:"Builder 转换规则",fixer:"Fixer 修复规则"};function bn(e){const n=e.trim();return n===""||n.startsWith("```")||/^#{1,6}\s+/.test(n)||/^>\s+/.test(n)||/^[-*]\s+/.test(n)||/^\d+\.\s+/.test(n)||/^\|.+\|$/.test(n)}function p(e){const n=[],r=/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;let t=0,a;for(;a=r.exec(e);){a.index>t&&n.push(e.slice(t,a.index));const s=a[0];if(s.startsWith("`"))n.push(i.jsx("code",{children:s.slice(1,-1)},n.length));else if(s.startsWith("**"))n.push(i.jsx("strong",{children:s.slice(2,-2)},n.length));else{const o=s.match(/^\[([^\]]+)\]\(([^)]+)\)$/);o&&n.push(i.jsx("a",{href:o[2],target:o[2].startsWith("http")?"_blank":void 0,rel:o[2].startsWith("http")?"noreferrer":void 0,children:o[1]},n.length))}t=a.index+s.length}return t<e.length&&n.push(e.slice(t)),n}function gn(e,n){return i.jsx("p",{children:e.map((r,t)=>i.jsxs(u.Fragment,{children:[t>0&&i.jsx("br",{}),p(r)]},`${n}-${t}`))},n)}function g(e,n,r){const t=n?"ol":"ul";return i.jsx(t,{children:e.map((a,s)=>{const o=a.match(/^(\s*)(?:[-*]|\d+\.)\s+(.+)$/),l=Math.floor(((o==null?void 0:o[1].length)||0)/2);return i.jsx("li",{style:{marginLeft:l*16},children:p((o==null?void 0:o[2])||a.trim())},`${r}-${s}`)})},r)}function In(e,n){const r=e.filter((s,o)=>o!==1||!/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(s)).map(s=>s.trim().replace(/^\||\|$/g,"").split("|").map(o=>o.trim())),[t,...a]=r;return i.jsx("div",{className:"codec-doc-table-wrap",children:i.jsxs("table",{children:[t&&i.jsx("thead",{children:i.jsx("tr",{children:t.map((s,o)=>i.jsx("th",{children:p(s)},o))})}),i.jsx("tbody",{children:a.map((s,o)=>i.jsx("tr",{children:s.map((l,c)=>i.jsx("td",{children:p(l)},c))},o))})]})},n)}function xn(e,n){return i.jsx("blockquote",{children:e.map((r,t)=>i.jsxs(u.Fragment,{children:[t>0&&i.jsx("br",{}),p(r.replace(/^>\s?/,"").trim())]},`${n}-${t}`))},n)}function hn(e,n,r){const t=p(n);switch(e){case 1:return i.jsx("h1",{children:t},r);case 2:return i.jsx("h2",{children:t},r);case 3:return i.jsx("h3",{children:t},r);default:return i.jsx("h4",{children:t},r)}}function vn({markdown:e}){const n=[],r=e.split(`
+`).replace(/^##\s+0\.\s+/mu,"## ").trim()}function O(e,n,r,t){const a=ln(n),s=y(e,a),o=on(e)||"暂无规则注释";return{id:`${r}-${v(s)}`,title:s,kind:r,sourcePath:a,markdown:o,summary:N(o),order:t}}function dn(){const e=pn(nn),n=un(e,"文档说明");return[{id:`overview-${v(n)}`,title:n,kind:"overview",sourcePath:"src/codecJson/docs/field-transformation-rules.md",markdown:e,summary:N(e),order:1}]}const fn=new Map(rn.map((e,n)=>[e,n+1])),mn=cn(x),_n=Object.entries(en).map(([e,n])=>{const r=y(n,e);return O(n,e,"builder",fn.get(r))}).sort((e,n)=>(e.order||Number.MAX_SAFE_INTEGER)-(n.order||Number.MAX_SAFE_INTEGER)||e.title.localeCompare(n.title)),Tn=Object.entries(tn).filter(([e])=>!an.has(h(e))).map(([e,n])=>{const r=y(n,e);return O(n,e,"fixer",mn.get(r))}).sort((e,n)=>(e.order||Number.MAX_SAFE_INTEGER)-(n.order||Number.MAX_SAFE_INTEGER)||e.title.localeCompare(n.title)),yn=[...dn(),..._n,...Tn],{Text:d,Title:T}=U,B={overview:"总览",builder:"Builder",fixer:"Fixer"},j={overview:"blue",builder:"green",fixer:"gold"},bn={overview:"生成总览",builder:"Builder 转换规则",fixer:"Fixer 修复规则"};function gn(e){const n=e.trim();return n===""||n.startsWith("```")||/^#{1,6}\s+/.test(n)||/^>\s+/.test(n)||/^[-*]\s+/.test(n)||/^\d+\.\s+/.test(n)||/^\|.+\|$/.test(n)}function p(e){const n=[],r=/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;let t=0,a;for(;a=r.exec(e);){a.index>t&&n.push(e.slice(t,a.index));const s=a[0];if(s.startsWith("`"))n.push(i.jsx("code",{children:s.slice(1,-1)},n.length));else if(s.startsWith("**"))n.push(i.jsx("strong",{children:s.slice(2,-2)},n.length));else{const o=s.match(/^\[([^\]]+)\]\(([^)]+)\)$/);o&&n.push(i.jsx("a",{href:o[2],target:o[2].startsWith("http")?"_blank":void 0,rel:o[2].startsWith("http")?"noreferrer":void 0,children:o[1]},n.length))}t=a.index+s.length}return t<e.length&&n.push(e.slice(t)),n}function In(e,n){return i.jsx("p",{children:e.map((r,t)=>i.jsxs(u.Fragment,{children:[t>0&&i.jsx("br",{}),p(r)]},`${n}-${t}`))},n)}function g(e,n,r){const t=n?"ol":"ul";return i.jsx(t,{children:e.map((a,s)=>{const o=a.match(/^(\s*)(?:[-*]|\d+\.)\s+(.+)$/),l=Math.floor(((o==null?void 0:o[1].length)||0)/2);return i.jsx("li",{style:{marginLeft:l*16},children:p((o==null?void 0:o[2])||a.trim())},`${r}-${s}`)})},r)}function xn(e,n){const r=e.filter((s,o)=>o!==1||!/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(s)).map(s=>s.trim().replace(/^\||\|$/g,"").split("|").map(o=>o.trim())),[t,...a]=r;return i.jsx("div",{className:"codec-doc-table-wrap",children:i.jsxs("table",{children:[t&&i.jsx("thead",{children:i.jsx("tr",{children:t.map((s,o)=>i.jsx("th",{children:p(s)},o))})}),i.jsx("tbody",{children:a.map((s,o)=>i.jsx("tr",{children:s.map((l,c)=>i.jsx("td",{children:p(l)},c))},o))})]})},n)}function hn(e,n){return i.jsx("blockquote",{children:e.map((r,t)=>i.jsxs(u.Fragment,{children:[t>0&&i.jsx("br",{}),p(r.replace(/^>\s?/,"").trim())]},`${n}-${t}`))},n)}function vn(e,n,r){const t=p(n);switch(e){case 1:return i.jsx("h1",{children:t},r);case 2:return i.jsx("h2",{children:t},r);case 3:return i.jsx("h3",{children:t},r);default:return i.jsx("h4",{children:t},r)}}function Nn({markdown:e}){const n=[],r=e.split(`
 `);let t=0;for(;t<r.length;){const a=r[t],s=a.trim();if(!s){t+=1;continue}if(s.startsWith("```")){const c=s.slice(3).trim(),b=[];for(t+=1;t<r.length&&!r[t].trim().startsWith("```");)b.push(r[t]),t+=1;t+=1,n.push(i.jsxs("pre",{children:[c&&i.jsx("span",{className:"codec-doc-code-lang",children:c}),i.jsx("code",{children:b.join(`
-`)})]},n.length));continue}const o=s.match(/^(#{1,6})\s+(.+)$/);if(o){const c=Math.min(o[1].length,4);n.push(hn(c,o[2],n.length)),t+=1;continue}if(/^>\s+/.test(s)){const c=[];for(;t<r.length&&/^>\s+/.test(r[t].trim());)c.push(r[t].trim()),t+=1;n.push(xn(c,n.length));continue}if(/^\|.+\|$/.test(s)){const c=[];for(;t<r.length&&/^\|.+\|$/.test(r[t].trim());)c.push(r[t]),t+=1;n.push(In(c,n.length));continue}if(/^\s*[-*]\s+/.test(a)){const c=[];for(;t<r.length&&/^\s*[-*]\s+/.test(r[t]);)c.push(r[t]),t+=1;n.push(g(c,!1,n.length));continue}if(/^\s*\d+\.\s+/.test(a)){const c=[];for(;t<r.length&&/^\s*\d+\.\s+/.test(r[t]);)c.push(r[t]),t+=1;n.push(g(c,!0,n.length));continue}const l=[];for(;t<r.length&&!bn(r[t]);)l.push(r[t].trim()),t+=1;n.push(gn(l,n.length))}return i.jsx("div",{className:"codec-doc-markdown",children:n})}function Nn(e){var n;(n=document.getElementById(e))==null||n.scrollIntoView({behavior:"smooth",block:"start"})}function On({doc:e}){const n=e.markdown.trim().startsWith("# ");return i.jsxs("article",{id:e.id,className:"codec-rule-article",children:[i.jsx("header",{className:"codec-rule-article-head",children:i.jsxs("div",{children:[i.jsxs(I,{size:8,wrap:!0,children:[!n&&i.jsx(T,{level:3,children:e.title}),i.jsx(f,{color:j[e.kind],children:B[e.kind]}),e.order!=null&&i.jsxs(f,{children:["#",e.order]}),n&&i.jsx(d,{type:"secondary",children:e.sourcePath})]}),!n&&i.jsx(d,{type:"secondary",children:e.sourcePath})]})}),i.jsx(vn,{markdown:e.markdown})]})}function Un(){const[e,n]=u.useState(""),r=u.useMemo(()=>{const a=e.trim().toLowerCase();return Tn.filter(s=>a?[s.title,s.summary,s.sourcePath,s.markdown].join(`
-`).toLowerCase().includes(a):!0)},[e]),t=["overview","builder","fixer"].map(a=>({kind:a,title:yn[a],docs:r.filter(s=>s.kind===a)})).filter(a=>a.docs.length>0);return i.jsxs("div",{className:"codec-rules-page",children:[i.jsxs("aside",{className:"codec-rules-sidebar",children:[i.jsxs("div",{className:"codec-rules-sidebar-head",children:[i.jsxs(I,{size:8,children:[i.jsx(E,{}),i.jsx(d,{strong:!0,children:"Codec 规则"})]}),i.jsxs(d,{type:"secondary",children:[r.length," 项"]})]}),i.jsx(D,{allowClear:!0,prefix:i.jsx(S,{}),placeholder:"搜索规则",value:e,onChange:a=>n(a.target.value)}),i.jsx("nav",{className:"codec-rules-toc",children:t.length===0?i.jsx(m,{image:m.PRESENTED_IMAGE_SIMPLE,description:"没有匹配内容"}):t.map(a=>i.jsxs("div",{className:"codec-rules-toc-group",children:[i.jsx("div",{className:"codec-rules-toc-group-title",children:a.title}),a.docs.map(s=>i.jsxs("button",{type:"button",onClick:()=>Nn(s.id),className:"codec-rules-toc-item",children:[i.jsx("span",{children:s.title}),i.jsx(f,{color:j[s.kind],children:B[s.kind]})]},s.id))]},a.kind))})]}),i.jsxs("main",{className:"codec-rules-content",children:[i.jsx("section",{className:"codec-rules-intro",children:i.jsxs("div",{children:[i.jsx(T,{level:2,children:"Codec 规则文档"}),i.jsx(d,{type:"secondary",children:"从 codec.json 生成链路源码注释自动生成，适合测试和业务同学快速确认字段转换规则。"})]})}),t.length===0?i.jsx("div",{className:"codec-rules-empty",children:i.jsx(m,{description:"没有匹配内容"})}):t.map(a=>i.jsxs("section",{className:"codec-rules-section",children:[i.jsxs("div",{className:"codec-rules-section-title",children:[i.jsx(T,{level:3,children:a.title}),i.jsx(f,{children:a.docs.length})]}),a.docs.map(s=>i.jsx(On,{doc:s},s.id))]},a.kind))]})]})}export{Un as default};
+`)})]},n.length));continue}const o=s.match(/^(#{1,6})\s+(.+)$/);if(o){const c=Math.min(o[1].length,4);n.push(vn(c,o[2],n.length)),t+=1;continue}if(/^>\s+/.test(s)){const c=[];for(;t<r.length&&/^>\s+/.test(r[t].trim());)c.push(r[t].trim()),t+=1;n.push(hn(c,n.length));continue}if(/^\|.+\|$/.test(s)){const c=[];for(;t<r.length&&/^\|.+\|$/.test(r[t].trim());)c.push(r[t]),t+=1;n.push(xn(c,n.length));continue}if(/^\s*[-*]\s+/.test(a)){const c=[];for(;t<r.length&&/^\s*[-*]\s+/.test(r[t]);)c.push(r[t]),t+=1;n.push(g(c,!1,n.length));continue}if(/^\s*\d+\.\s+/.test(a)){const c=[];for(;t<r.length&&/^\s*\d+\.\s+/.test(r[t]);)c.push(r[t]),t+=1;n.push(g(c,!0,n.length));continue}const l=[];for(;t<r.length&&!gn(r[t]);)l.push(r[t].trim()),t+=1;n.push(In(l,n.length))}return i.jsx("div",{className:"codec-doc-markdown",children:n})}function On(e){var n;(n=document.getElementById(e))==null||n.scrollIntoView({behavior:"smooth",block:"start"})}function Bn({doc:e}){const n=e.markdown.trim().startsWith("# ");return i.jsxs("article",{id:e.id,className:"codec-rule-article",children:[i.jsx("header",{className:"codec-rule-article-head",children:i.jsxs("div",{children:[i.jsxs(I,{size:8,wrap:!0,children:[!n&&i.jsx(T,{level:3,children:e.title}),i.jsx(f,{color:j[e.kind],children:B[e.kind]}),e.order!=null&&i.jsxs(f,{children:["#",e.order]}),n&&i.jsx(d,{type:"secondary",children:e.sourcePath})]}),!n&&i.jsx(d,{type:"secondary",children:e.sourcePath})]})}),i.jsx(Nn,{markdown:e.markdown})]})}function Sn(){const[e,n]=u.useState(""),r=u.useMemo(()=>{const a=e.trim().toLowerCase();return yn.filter(s=>a?[s.title,s.summary,s.sourcePath,s.markdown].join(`
+`).toLowerCase().includes(a):!0)},[e]),t=["overview","builder","fixer"].map(a=>({kind:a,title:bn[a],docs:r.filter(s=>s.kind===a)})).filter(a=>a.docs.length>0);return i.jsxs("div",{className:"codec-rules-page",children:[i.jsxs("aside",{className:"codec-rules-sidebar",children:[i.jsxs("div",{className:"codec-rules-sidebar-head",children:[i.jsxs(I,{size:8,children:[i.jsx(E,{}),i.jsx(d,{strong:!0,children:"Codec 规则"})]}),i.jsxs(d,{type:"secondary",children:[r.length," 项"]})]}),i.jsx(L,{allowClear:!0,prefix:i.jsx(S,{}),placeholder:"搜索规则",value:e,onChange:a=>n(a.target.value)}),i.jsx("nav",{className:"codec-rules-toc",children:t.length===0?i.jsx(m,{image:m.PRESENTED_IMAGE_SIMPLE,description:"没有匹配内容"}):t.map(a=>i.jsxs("div",{className:"codec-rules-toc-group",children:[i.jsx("div",{className:"codec-rules-toc-group-title",children:a.title}),a.docs.map(s=>i.jsxs("button",{type:"button",onClick:()=>On(s.id),className:"codec-rules-toc-item",children:[i.jsx("span",{children:s.title}),i.jsx(f,{color:j[s.kind],children:B[s.kind]})]},s.id))]},a.kind))})]}),i.jsxs("main",{className:"codec-rules-content",children:[i.jsx("section",{className:"codec-rules-intro",children:i.jsxs("div",{children:[i.jsx(T,{level:2,children:"Codec 规则文档"}),i.jsx(d,{type:"secondary",children:"从 codec.json 生成链路源码注释自动生成，适合测试和业务同学快速确认字段转换规则。"})]})}),t.length===0?i.jsx("div",{className:"codec-rules-empty",children:i.jsx(m,{description:"没有匹配内容"})}):t.map(a=>i.jsxs("section",{className:"codec-rules-section",children:[i.jsxs("div",{className:"codec-rules-section-title",children:[i.jsx(T,{level:3,children:a.title}),i.jsx(f,{children:a.docs.length})]}),a.docs.map(s=>i.jsx(Bn,{doc:s},s.id))]},a.kind))]})]})}export{Sn as default};
